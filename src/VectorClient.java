@@ -4,9 +4,9 @@ import java.util.Scanner;
 
 public class VectorClient {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         String host = "localhost";
-        int port = 5000;
+        int port = 5001;
 
         try (
                 Socket socket = new Socket(host, port);

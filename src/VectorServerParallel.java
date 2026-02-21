@@ -4,8 +4,8 @@ import java.net.Socket;
 
 public class VectorServerParallel {
 
-    public static void main(String[] args) {
-        int port = 5000;
+    static void main(String[] args) {
+        int port = 5001;
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Параллельный сервер запущен.");

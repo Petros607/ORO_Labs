@@ -1,15 +1,65 @@
-# IntelliJ
-.idea/
-*.iml
-
 # Compiled files
-out/
-target/
 *.class
+*.jar
+*.war
+*.ear
+target/
+out/
+
+# IDE files
+.idea/
+*.iws
+*.iml
+*.ipr
+.classpath
+.project
+.settings/
+.vscode/
+.metadata
+bin/
+build/
+
+# Gradle
+.gradle/
+build/
+gradle-app.setting
+
+# Maven
+log/
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
 
 # Logs
 *.log
+logs/
 
-# OS files
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Package files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Other
+*.bak
+*.tmp
+*.swp
+*~
+~*

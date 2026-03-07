@@ -9,9 +9,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Remote интерфейс для работы с магазином
- */
+
 public interface ShopService extends Remote {
 
     // 1. Получить всех клиентов с их заказами

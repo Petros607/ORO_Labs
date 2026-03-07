@@ -1,7 +1,7 @@
 import java.sql.*;
 import java.util.Scanner;
 
-public class ShopDatabaseManager {
+public class ShopDatabaseManagerTest {
     private Connection connection;
     private Scanner scanner;
 
@@ -9,7 +9,7 @@ public class ShopDatabaseManager {
     private static final String USER = "marka";
     private static final String PASSWORD = "";
 
-    public ShopDatabaseManager() {
+    public ShopDatabaseManagerTest() {
         this.scanner = new Scanner(System.in);
         connect();
     }
@@ -481,7 +481,7 @@ public class ShopDatabaseManager {
     }
 
     public static void main(String[] args) {
-        ShopDatabaseManager manager = new ShopDatabaseManager();
+        ShopDatabaseManagerTest manager = new ShopDatabaseManagerTest();
         try {
             manager.showMenu();
         } finally {

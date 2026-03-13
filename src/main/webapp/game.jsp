@@ -60,7 +60,12 @@
         }
         table.board td {
             border: 1px solid #1f2937;
-            cursor: default;
+            cursor: pointer;
+            transition: background 0.08s ease-out, transform 0.05s ease-out;
+        }
+        table.board td:hover {
+            transform: translateY(-1px);
+            background: rgba(15,23,42,0.9);
         }
         .cell-hit {
             background: radial-gradient(circle, #f97316, #b91c1c 70%);
@@ -69,6 +74,10 @@
         }
         .cell-miss {
             color: #6b7280;
+        }
+        .cell-near {
+            color: #4b5563;
+            font-size: 11px;
         }
         .cell-empty {
             background: #020617;
@@ -192,6 +201,39 @@
             margin-top: 6px;
             justify-content: flex-end;
         }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+        }
+        .modal {
+            background: #020617;
+            border-radius: 18px;
+            padding: 24px 26px;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 24px 60px rgba(15,23,42,0.95);
+            border: 1px solid rgba(148,163,184,0.6);
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .modal-text {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 16px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -205,12 +247,17 @@
     }
     ShotResult shotResult = (ShotResult) request.getAttribute("shotResult");
     CellState[][] field = game.getField();
+    GameStatus status = game.getStatus();
+    boolean finished = game.isFinished();
 %>
 <div class="layout">
     <div>
         <h1>Морской бой</h1>
         <div class="subtitle">Одинарные цели, не касаются друг друга ни сторонами, ни углами.</div>
 
+        <form id="shootForm" method="post" action="shot">
+            <input type="hidden" name="row" id="rowField">
+            <input type="hidden" name="col" id="colField">
         <table class="board">
             <tr>
                 <th></th>
@@ -231,13 +278,19 @@
                     } else if (cell == CellState.HIT) {
                         cls = "cell-hit";
                         symbol = "X";
+                    } else if (cell == CellState.NEAR) {
+                        cls = "cell-near";
+                        symbol = "·";
                     }
                 %>
-                <td class="<%= cls %>"><%= symbol %></td>
+                <td class="<%= cls %>"
+                    data-row="<%= (r + 1) %>"
+                    data-col="<%= (c + 1) %>"><%= symbol %></td>
                 <% } %>
             </tr>
             <% } %>
         </table>
+        </form>
     </div>
 
     <div class="panel">
@@ -246,7 +299,6 @@
                 <span>Статус</span>
                 <span>
                 <%
-                    GameStatus status = game.getStatus();
                     if (status == GameStatus.IN_PROGRESS) {
                 %>
                     <span class="badge badge-live">В процессе</span>
@@ -273,33 +325,64 @@
         </div>
         <% } %>
 
-        <%
-            boolean finished = game.isFinished();
-        %>
-        <div>
-            <form method="post" action="shot" class="shoot">
-                <div>
-                    <label for="row">Строка</label>
-                    <input type="number" id="row" name="row"
-                           min="1" max="<%= game.getRows() %>" <%= finished ? "disabled" : "" %> required>
-                </div>
-                <div>
-                    <label for="col">Столбец</label>
-                    <input type="number" id="col" name="col"
-                           min="1" max="<%= game.getCols() %>" <%= finished ? "disabled" : "" %> required>
-                </div>
-                <div class="actions">
-                    <button type="button" class="btn-secondary"
-                            onclick="window.location.href='index.jsp'">Новая игра</button>
-                    <button type="submit" class="btn-primary" <%= finished ? "disabled" : "" %>>
-                        Выстрел
-                    </button>
-                </div>
-            </form>
+        <div class="actions">
+            <button type="button" class="btn-secondary"
+                    onclick="window.location.href='index.jsp'">Новая игра</button>
         </div>
     </div>
 </div>
+<% if (finished) { %>
+<div class="overlay">
+    <div class="modal">
+        <div class="modal-title">
+            <%= status == GameStatus.WON ? "Победа!" : "Поражение" %>
+        </div>
+        <div class="modal-text">
+            <% if (status == GameStatus.WON) { %>
+                Вы уничтожили все цели за <%= game.getTotalTargets() %> попаданий. Отличная работа, командир!
+            <% } else { %>
+                Выстрелы закончились, а цели ещё остались на поле. Попробуйте изменить параметры или стратегию.
+            <% } %>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary"
+                    onclick="document.querySelector('.overlay').style.display='none'">
+                Продолжить просмотр поля
+            </button>
+            <button type="button" class="btn-primary"
+                    onclick="window.location.href='index.jsp'">
+                Новая игра
+            </button>
+        </div>
+    </div>
+</div>
+<% } %>
+<script>
+    (function () {
+        const finished = <%= finished ? "true" : "false" %>;
+        if (finished) {
+            return;
+        }
+        const form = document.getElementById('shootForm');
+        const rowField = document.getElementById('rowField');
+        const colField = document.getElementById('colField');
+        const cells = document.querySelectorAll('table.board td');
+
+        cells.forEach(function (cell) {
+            cell.addEventListener('click', function () {
+                if (cell.classList.contains('cell-hit')
+                    || cell.classList.contains('cell-miss')
+                    || cell.classList.contains('cell-near')) {
+                    return;
+                }
+                const row = cell.getAttribute('data-row');
+                const col = cell.getAttribute('data-col');
+                rowField.value = row;
+                colField.value = col;
+                form.submit();
+            });
+        });
+    })();
+</script>
 </body>
 </html>
-
-

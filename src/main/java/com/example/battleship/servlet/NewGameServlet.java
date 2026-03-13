@@ -9,12 +9,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Инициализация новой игры.
  */
 @WebServlet(name = "NewGameServlet", urlPatterns = {"/new-game"})
 public class NewGameServlet extends HttpServlet {
+
+    private static final Logger log = Logger.getLogger(NewGameServlet.class.getName());
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -33,6 +37,8 @@ public class NewGameServlet extends HttpServlet {
 
             String error = validateParams(rows, cols, targets, shots);
             if (error != null) {
+                log.log(Level.WARNING, "Invalid new game parameters: rows={0}, cols={1}, targets={2}, shots={3}, reason={4}",
+                        new Object[]{rows, cols, targets, shots, error});
                 req.setAttribute("error", error);
                 req.getRequestDispatcher("index.jsp").forward(req, resp);
                 return;
@@ -42,8 +48,13 @@ public class NewGameServlet extends HttpServlet {
             HttpSession httpSession = req.getSession(true);
             httpSession.setAttribute("game", session);
 
+            log.log(Level.INFO, "New game created: sessionId={0}, rows={1}, cols={2}, targets={3}, shots={4}",
+                    new Object[]{httpSession.getId(), rows, cols, targets, shots});
+
             req.getRequestDispatcher("game.jsp").forward(req, resp);
         } catch (NumberFormatException e) {
+            log.log(Level.WARNING, "Failed to parse game parameters: rows={0}, cols={1}, targets={2}, shots={3}",
+                    new Object[]{rowsParam, colsParam, targetsParam, shotsParam});
             req.setAttribute("error", "Все параметры должны быть целыми числами");
             req.getRequestDispatcher("index.jsp").forward(req, resp);
         }

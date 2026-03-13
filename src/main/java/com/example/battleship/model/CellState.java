@@ -7,7 +7,8 @@ public enum CellState {
     EMPTY,
     TARGET,
     MISS,
-    HIT
+    HIT,
+    NEAR // автоматически отмеченная пустая клетка вокруг уничтоженной цели
 }
 
 

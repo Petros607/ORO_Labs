@@ -107,7 +107,7 @@
 <body>
 <div class="card">
     <h1>Морской бой</h1>
-    <div class="subtitle">Настройте параметры и начните новую партию.</div>
+    <div class="subtitle">Настройте параметры поля и количество кораблей. Все цели занимают одну клетку и не касаются друг друга.</div>
 
     <%
         String error = (String) request.getAttribute("error");
@@ -119,22 +119,22 @@
     <form method="post" action="new-game">
         <div class="grid">
             <div>
-                <label for="rows">Строки (10–20)</label>
+                <label for="rows">Количество строк (10–20)</label>
                 <input type="number" id="rows" name="rows" min="10" max="20" value="10" required>
             </div>
             <div>
-                <label for="cols">Столбцы (10–20)</label>
+                <label for="cols">Количество столбцов (10–20)</label>
                 <input type="number" id="cols" name="cols" min="10" max="20" value="10" required>
             </div>
             <div>
-                <label for="targets">Цели</label>
+                <label for="targets">Количество целей</label>
                 <input type="number" id="targets" name="targets" min="1" value="10" required>
-                <div class="helper">1 ≤ targets ≤ ⌈N/2⌉ × ⌈M/2⌉</div>
+                <div class="helper" id="targetsHint">1 ≤ цели ≤ ⌈N/2⌉ × ⌈M/2⌉</div>
             </div>
             <div>
-                <label for="shots">Выстрелы</label>
+                <label for="shots">Количество выстрелов</label>
                 <input type="number" id="shots" name="shots" min="1" value="30" required>
-                <div class="helper">targets ≤ shots ≤ N × M</div>
+                <div class="helper" id="shotsHint">цели ≤ выстрелы ≤ N × M</div>
             </div>
         </div>
         <div class="actions">
@@ -143,6 +143,41 @@
     </form>
 </div>
 </body>
+<script>
+    (function () {
+        const rowsInput = document.getElementById('rows');
+        const colsInput = document.getElementById('cols');
+        const targetsInput = document.getElementById('targets');
+        const shotsInput = document.getElementById('shots');
+        const targetsHint = document.getElementById('targetsHint');
+        const shotsHint = document.getElementById('shotsHint');
+
+        function ceilHalf(x) {
+            return Math.ceil(x / 2);
+        }
+
+        function updateHints() {
+            const n = parseInt(rowsInput.value, 10) || 0;
+            const m = parseInt(colsInput.value, 10) || 0;
+
+            const maxTargets = ceilHalf(n) * ceilHalf(m);
+            const minTargets = 1;
+            targetsInput.min = String(minTargets);
+            targetsInput.max = String(maxTargets);
+            targetsHint.textContent = minTargets + " <= цели <= " + maxTargets;
+
+            const minShots = Math.max(minTargets, parseInt(targetsInput.value || minTargets, 10));
+            const maxShots = n * m || 0;
+            shotsInput.min = String(minShots);
+            shotsInput.max = String(maxShots);
+            shotsHint.textContent = "цели <= выстрелы <= " + (maxShots || "N × M");
+        }
+
+        rowsInput.addEventListener('input', updateHints);
+        colsInput.addEventListener('input', updateHints);
+        targetsInput.addEventListener('input', updateHints);
+
+        updateHints();
+    })();
+</script>
 </html>
-
-

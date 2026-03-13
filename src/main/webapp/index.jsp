@@ -230,7 +230,7 @@
 
             const currentTargets = parseInt(targetsInput.value || minTargets, 10);
             const minShots = Math.max(minTargets, currentTargets);
-            const maxShots = 100;
+            const maxShots = n * m || 0;
             shotsInput.min = String(minShots);
             shotsInput.max = String(maxShots);
             shotsHint.textContent = minShots + " <= выстрелы <= " + maxShots;

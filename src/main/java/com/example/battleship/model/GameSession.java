@@ -37,21 +37,68 @@ public class GameSession implements Serializable {
                 field[r][c] = CellState.EMPTY;
             }
         }
-        placeTargetsRandomly();
-        log.log(Level.FINE, "GameSession created: rows={0}, cols={1}, totalTargets={2}, shots={3}",
-                new Object[]{rows, cols, totalTargets, shots});
+
+        int maxTargets = (int) (Math.ceil(rows / 2.0) * Math.ceil(cols / 2.0));
+        double density = maxTargets == 0 ? 0.0 : (double) totalTargets / maxTargets;
+
+        // Если количество целей близко к верхней границе (например, 25 из 25 на 10×10),
+        // используем детерминированный "шахматный" алгоритм, чтобы гарантировать размещение.
+        // В остальных случаях — случайное размещение.
+        if (density >= 0.85) {
+            placeTargetsDeterministic();
+        } else {
+            placeTargetsRandomly();
+        }
+
+        log.log(Level.FINE, "GameSession created: rows={0}, cols={1}, totalTargets={2}, shots={3}, density={4}",
+                new Object[]{rows, cols, totalTargets, shots, density});
+    }
+
+    private void placeTargetsDeterministic() {
+        int placed = 0;
+        outer:
+        for (int r = 0; r < rows; r += 2) {
+            for (int c = 0; c < cols; c += 2) {
+                field[r][c] = CellState.TARGET;
+                placed++;
+                if (placed == totalTargets) {
+                    break outer;
+                }
+            }
+        }
+        if (placed < totalTargets) {
+            log.log(Level.WARNING, "Could not place all targets deterministically: requested={0}, placed={1}",
+                    new Object[]{totalTargets, placed});
+        }
     }
 
     private void placeTargetsRandomly() {
         Random random = new Random();
         int placed = 0;
-        while (placed < totalTargets) {
+        int attempts = 0;
+        int maxAttempts = rows * cols * 20;
+
+        while (placed < totalTargets && attempts < maxAttempts) {
             int r = random.nextInt(rows);
             int c = random.nextInt(cols);
             if (canPlaceTarget(r, c)) {
                 field[r][c] = CellState.TARGET;
                 placed++;
             }
+            attempts++;
+        }
+
+        if (placed < totalTargets) {
+            log.log(Level.WARNING,
+                    "Random placement could not place all targets, falling back to deterministic: requested={0}, placed={1}",
+                    new Object[]{totalTargets, placed});
+            // Сбросить поле и расставить детерминированно
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    field[r][c] = CellState.EMPTY;
+                }
+            }
+            placeTargetsDeterministic();
         }
     }
 

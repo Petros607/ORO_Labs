@@ -483,37 +483,32 @@
                     const col = cell.getAttribute('data-col');
                     rowField.value = row;
                     colField.value = col;
+
+                    // Звук выстрела всегда в момент клика по клетке
+                    if (shotSound) {
+                        shotSound.currentTime = 0;
+                        shotSound.play().catch(function () {});
+                    }
+
                     form.submit();
                 });
             });
         }
 
-        function playDeferredSounds() {
-            if (lastResultValid) {
-                if (lastResultHit && hitSound) {
-                    hitSound.play().catch(function () {});
-                } else if (shotSound) {
-                    shotSound.play().catch(function () {});
-                }
-            }
-
-            if (finished) {
-                if (statusNow === 'WON' && winSound) {
-                    winSound.play().catch(function () {});
-                } else if (statusNow === 'LOST' && loseSound) {
-                    loseSound.play().catch(function () {});
-                }
+        // После загрузки страницы (перехода после выстрела) пытаемся
+        // воспроизвести звук попадания/победы/поражения поверх фоновой музыки.
+        if (lastResultValid) {
+            if (lastResultHit && hitSound) {
+                hitSound.play().catch(function () {});
             }
         }
 
-        // Чтобы не упираться в политику автопроигрывания,
-        // звуки попадания/победы/поражения играем при первом клике после перезагрузки страницы.
-        if (lastResultValid || finished) {
-            function onFirstClick() {
-                playDeferredSounds();
-                document.removeEventListener('click', onFirstClick);
+        if (finished) {
+            if (statusNow === 'WON' && winSound) {
+                winSound.play().catch(function () {});
+            } else if (statusNow === 'LOST' && loseSound) {
+                loseSound.play().catch(function () {});
             }
-            document.addEventListener('click', onFirstClick);
         }
     })();
 </script>

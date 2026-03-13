@@ -9,10 +9,46 @@
     <meta charset="UTF-8">
     <title>Морской бой – игра</title>
     <style>
+        :root {
+            --bg-main: radial-gradient(circle at top, #1a365d, #0f172a);
+            --bg-panel: rgba(15, 23, 42, 0.96);
+            --border-panel: rgba(148, 163, 184, 0.35);
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --board-bg: #020617;
+            --board-header-bg: #0b1120;
+            --cell-border: #1f2937;
+            --cell-available: #0b1725;
+            --cell-inactive: #020617;
+            --stats-bg: rgba(15,23,42,0.9);
+            --stats-border: rgba(148,163,184,0.4);
+            --btn-secondary-bg: rgba(15,23,42,1);
+            --btn-secondary-text: #e5e7eb;
+            --btn-secondary-border: rgba(148,163,184,0.7);
+            --modal-bg: #020617;
+        }
+        .theme-light {
+            --bg-main: radial-gradient(circle at top, #e5f0ff, #e5e7eb);
+            --bg-panel: rgba(255, 255, 255, 0.98);
+            --border-panel: rgba(148, 163, 184, 0.55);
+            --text-main: #0f172a;
+            --text-muted: #6b7280;
+            --board-bg: #f9fafb;
+            --board-header-bg: #e5e7eb;
+            --cell-border: #d1d5db;
+            --cell-available: #e0f2fe;
+            --cell-inactive: #f3f4f6;
+            --stats-bg: #f3f4f6;
+            --stats-border: #d1d5db;
+            --btn-secondary-bg: #ffffff;
+            --btn-secondary-text: #0f172a;
+            --btn-secondary-border: #cbd5e1;
+            --modal-bg: #ffffff;
+        }
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: radial-gradient(circle at top, #1a365d, #0f172a);
-            color: #e5e7eb;
+            background: var(--bg-main);
+            color: var(--text-main);
             margin: 0;
             min-height: 100vh;
             display: flex;
@@ -25,9 +61,9 @@
             gap: 32px;
             padding: 32px 40px;
             border-radius: 18px;
-            background: rgba(15, 23, 42, 0.96);
+            background: var(--bg-panel);
             box-shadow: 0 30px 60px rgba(15,23,42,0.9);
-            border: 1px solid rgba(148, 163, 184, 0.35);
+            border: 1px solid var(--border-panel);
         }
         h1 {
             margin: 0 0 8px;
@@ -37,12 +73,12 @@
         }
         .subtitle {
             margin-bottom: 18px;
-            color: #9ca3af;
+            color: var(--text-muted);
             font-size: 13px;
         }
         table.board {
             border-collapse: collapse;
-            background: #020617;
+            background: var(--board-bg);
             border-radius: 14px;
             overflow: hidden;
         }
@@ -54,12 +90,12 @@
             font-size: 13px;
         }
         table.board th {
-            background: #0b1120;
-            color: #9ca3af;
+            background: var(--board-header-bg);
+            color: var(--text-muted);
             font-weight: 500;
         }
         table.board td {
-            border: 1px solid #1f2937;
+            border: 1px solid var(--cell-border);
             cursor: pointer;
             transition: background 0.08s ease-out, transform 0.05s ease-out;
         }
@@ -73,14 +109,16 @@
             font-weight: 700;
         }
         .cell-miss {
+            background: var(--cell-inactive);
             color: #6b7280;
         }
         .cell-near {
+            background: var(--cell-inactive);
             color: #4b5563;
             font-size: 11px;
         }
         .cell-empty {
-            background: #020617;
+            background: var(--cell-available);
         }
         .panel {
             display: flex;
@@ -91,8 +129,8 @@
         .stats {
             padding: 12px 14px;
             border-radius: 12px;
-            background: rgba(15,23,42,0.9);
-            border: 1px solid rgba(148,163,184,0.4);
+            background: var(--stats-bg);
+            border: 1px solid var(--stats-border);
             font-size: 13px;
         }
         .stats-row {
@@ -182,9 +220,9 @@
             box-shadow: 0 14px 30px rgba(34,197,94,0.35);
         }
         .btn-secondary {
-            background: rgba(15,23,42,1);
-            color: #e5e7eb;
-            border: 1px solid rgba(148,163,184,0.7);
+            background: var(--btn-secondary-bg);
+            color: var(--btn-secondary-text);
+            border: 1px solid var(--btn-secondary-border);
         }
         .btn-primary:hover,
         .btn-secondary:hover {
@@ -211,11 +249,11 @@
             z-index: 40;
         }
         .modal {
-            background: #020617;
+            background: var(--modal-bg);
             border-radius: 18px;
             padding: 24px 26px;
-            max-width: 360px;
-            width: 100%;
+            max-width: 380px;
+            width: calc(100% - 32px);
             box-shadow: 0 24px 60px rgba(15,23,42,0.95);
             border: 1px solid rgba(148,163,184,0.6);
         }
@@ -228,11 +266,32 @@
             font-size: 14px;
             color: #9ca3af;
             margin-bottom: 16px;
+            word-wrap: break-word;
+            word-break: break-word;
         }
         .modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+        }
+        .top-bar {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+        }
+        .pill-button {
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.7);
+            padding: 4px 10px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
     </style>
 </head>
@@ -251,6 +310,9 @@
     boolean finished = game.isFinished();
 %>
 <div class="layout">
+    <div class="top-bar">
+        <button type="button" class="pill-button" id="themeToggle">Тёмная тема</button>
+    </div>
     <div>
         <h1>Морской бой</h1>
         <div class="subtitle">Одинарные цели, не касаются друг друга ни сторонами, ни углами.</div>
@@ -357,31 +419,90 @@
     </div>
 </div>
 <% } %>
+<audio id="bgMusic" src="audio/bg-music.mp3" loop></audio>
+<audio id="shotSound" src="audio/shot.mp3"></audio>
+<audio id="hitSound" src="audio/hit.mp3"></audio>
+<audio id="winSound" src="audio/win.mp3"></audio>
+<audio id="loseSound" src="audio/lose.mp3"></audio>
 <script>
     (function () {
         const finished = <%= finished ? "true" : "false" %>;
-        if (finished) {
-            return;
-        }
+        const lastResultValid = <%= (shotResult != null && shotResult.isValid()) ? "true" : "false" %>;
+        const lastResultHit = <%= (shotResult != null && shotResult.getHit() != null && shotResult.getHit()) ? "true" : "false" %>;
+        const statusNow = "<%= status %>";
+
         const form = document.getElementById('shootForm');
         const rowField = document.getElementById('rowField');
         const colField = document.getElementById('colField');
         const cells = document.querySelectorAll('table.board td');
+        const themeToggle = document.getElementById('themeToggle');
 
-        cells.forEach(function (cell) {
-            cell.addEventListener('click', function () {
-                if (cell.classList.contains('cell-hit')
-                    || cell.classList.contains('cell-miss')
-                    || cell.classList.contains('cell-near')) {
-                    return;
-                }
-                const row = cell.getAttribute('data-row');
-                const col = cell.getAttribute('data-col');
-                rowField.value = row;
-                colField.value = col;
-                form.submit();
-            });
+        const bgMusic = document.getElementById('bgMusic');
+        const shotSound = document.getElementById('shotSound');
+        const hitSound = document.getElementById('hitSound');
+        const winSound = document.getElementById('winSound');
+        const loseSound = document.getElementById('loseSound');
+
+        function applyTheme(theme) {
+            document.body.classList.remove('theme-light');
+            if (theme === 'light') {
+                document.body.classList.add('theme-light');
+                themeToggle.textContent = 'Светлая тема';
+            } else {
+                themeToggle.textContent = 'Тёмная тема';
+            }
+        }
+
+        const savedTheme = window.localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+
+        themeToggle.addEventListener('click', function () {
+            const current = document.body.classList.contains('theme-light') ? 'light' : 'dark';
+            const next = current === 'light' ? 'dark' : 'light';
+            window.localStorage.setItem('theme', next);
+            applyTheme(next);
         });
+
+        function startMusicOnce() {
+            if (!bgMusic) return;
+            bgMusic.volume = 0.25;
+            bgMusic.play().catch(function () {});
+            document.removeEventListener('click', startMusicOnce);
+        }
+        document.addEventListener('click', startMusicOnce);
+
+        if (!finished) {
+            cells.forEach(function (cell) {
+                cell.addEventListener('click', function () {
+                    if (cell.classList.contains('cell-hit')
+                        || cell.classList.contains('cell-miss')
+                        || cell.classList.contains('cell-near')) {
+                        return;
+                    }
+                    const row = cell.getAttribute('data-row');
+                    const col = cell.getAttribute('data-col');
+                    rowField.value = row;
+                    colField.value = col;
+                    form.submit();
+                });
+            });
+        }
+
+        if (lastResultValid) {
+            if (lastResultHit && hitSound) {
+                hitSound.play().catch(function () {});
+            } else if (shotSound) {
+                shotSound.play().catch(function () {});
+            }
+        }
+
+        if (finished) {
+            if (statusNow === 'WON' && winSound) {
+                winSound.play().catch(function () {});
+            } else if (statusNow === 'LOST' && loseSound) {
+                loseSound.play().catch(function () {});
+            }
+        }
     })();
 </script>
 </body>

@@ -5,10 +5,28 @@
     <meta charset="UTF-8">
     <title>Морской бой – новая игра</title>
     <style>
+        :root {
+            --bg-main: radial-gradient(circle at top, #1a365d, #0f172a);
+            --bg-card: rgba(15, 23, 42, 0.95);
+            --border-card: rgba(148, 163, 184, 0.35);
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --input-bg: #020617;
+            --input-border: #4b5563;
+        }
+        .theme-light {
+            --bg-main: radial-gradient(circle at top, #e5f0ff, #e5e7eb);
+            --bg-card: rgba(255, 255, 255, 0.96);
+            --border-card: rgba(148, 163, 184, 0.55);
+            --text-main: #0f172a;
+            --text-muted: #6b7280;
+            --input-bg: #f9fafb;
+            --input-border: #cbd5f5;
+        }
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: radial-gradient(circle at top, #1a365d, #0f172a);
-            color: #e5e7eb;
+            background: var(--bg-main);
+            color: var(--text-main);
             margin: 0;
             min-height: 100vh;
             display: flex;
@@ -16,13 +34,15 @@
             justify-content: center;
         }
         .card {
-            background: rgba(15, 23, 42, 0.95);
+            background: var(--bg-card);
             border-radius: 16px;
             box-shadow: 0 24px 60px rgba(15,23,42,0.8);
             padding: 32px 40px;
             max-width: 520px;
             width: 100%;
-            border: 1px solid rgba(148, 163, 184, 0.35);
+            border: 1px solid var(--border-card);
+            position: relative;
+            overflow: hidden;
         }
         h1 {
             margin: 0 0 8px;
@@ -32,22 +52,22 @@
         }
         .subtitle {
             margin-bottom: 24px;
-            color: #9ca3af;
+            color: var(--text-muted);
             font-size: 14px;
         }
         label {
             display: block;
             font-size: 13px;
             margin-bottom: 4px;
-            color: #e5e7eb;
+            color: var(--text-main);
         }
         input {
             width: 100%;
             padding: 8px 10px;
             border-radius: 8px;
-            border: 1px solid #4b5563;
-            background: #020617;
-            color: #e5e7eb;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-main);
             font-size: 14px;
         }
         input:focus {
@@ -63,7 +83,7 @@
         }
         .helper {
             font-size: 12px;
-            color: #9ca3af;
+            color: var(--text-muted);
         }
         .error {
             background: rgba(239, 68, 68, 0.15);
@@ -102,10 +122,45 @@
             transform: translateY(0);
             box-shadow: 0 10px 24px rgba(34,197,94,0.4);
         }
+        .top-bar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+        }
+        .pill-button {
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.7);
+            padding: 4px 10px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .toast {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            bottom: 20px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(248, 113, 113, 0.7);
+            color: #fecaca;
+            display: none;
+        }
     </style>
 </head>
 <body>
 <div class="card">
+    <div class="top-bar">
+        <button type="button" class="pill-button" id="themeToggle">Тёмная тема</button>
+    </div>
     <h1>Морской бой</h1>
     <div class="subtitle">Настройте параметры поля и количество кораблей. Все цели занимают одну клетку и не касаются друг друга.</div>
 
@@ -113,7 +168,10 @@
         String error = (String) request.getAttribute("error");
         if (error != null) {
     %>
-    <div class="error"><%= error %></div>
+    <div class="error">
+        <strong>Ошибка:</strong>
+        <%= (error == null || error.trim().isEmpty()) ? "Проверьте корректность введённых параметров." : error %>
+    </div>
     <% } %>
 
     <form method="post" action="new-game">
@@ -142,7 +200,8 @@
         </div>
     </form>
 </div>
-</body>
+<audio id="bgMusic" src="audio/bg-music.mp3" loop></audio>
+<div class="toast" id="inputToast"></div>
 <script>
     (function () {
         const rowsInput = document.getElementById('rows');
@@ -151,6 +210,9 @@
         const shotsInput = document.getElementById('shots');
         const targetsHint = document.getElementById('targetsHint');
         const shotsHint = document.getElementById('shotsHint');
+        const themeToggle = document.getElementById('themeToggle');
+        const toast = document.getElementById('inputToast');
+        const bgMusic = document.getElementById('bgMusic');
 
         function ceilHalf(x) {
             return Math.ceil(x / 2);
@@ -166,16 +228,80 @@
             targetsInput.max = String(maxTargets);
             targetsHint.textContent = minTargets + " <= цели <= " + maxTargets;
 
-            const minShots = Math.max(minTargets, parseInt(targetsInput.value || minTargets, 10));
+            const currentTargets = parseInt(targetsInput.value || minTargets, 10);
+            const minShots = Math.max(minTargets, currentTargets);
             const maxShots = n * m || 0;
             shotsInput.min = String(minShots);
             shotsInput.max = String(maxShots);
             shotsHint.textContent = "цели <= выстрелы <= " + (maxShots || "N × M");
         }
 
+        function showToast(message) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(function () {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        function clampInput(input, min, max, fieldName) {
+            const value = parseInt(input.value, 10);
+            if (isNaN(value)) return;
+            if (value < min) {
+                input.value = String(min);
+                showToast(fieldName + " не может быть меньше " + min);
+            } else if (value > max) {
+                input.value = String(max);
+                showToast(fieldName + " не может быть больше " + max);
+            }
+        }
+
+        rowsInput.addEventListener('change', function () {
+            clampInput(rowsInput, 10, 20, "Количество строк");
+            updateHints();
+        });
+        colsInput.addEventListener('change', function () {
+            clampInput(colsInput, 10, 20, "Количество столбцов");
+            updateHints();
+        });
+        targetsInput.addEventListener('change', function () {
+            const maxTargets = parseInt(targetsInput.max || "1", 10);
+            clampInput(targetsInput, 1, maxTargets, "Количество целей");
+            updateHints();
+        });
+
         rowsInput.addEventListener('input', updateHints);
         colsInput.addEventListener('input', updateHints);
         targetsInput.addEventListener('input', updateHints);
+
+        function applyTheme(theme) {
+            document.body.classList.remove('theme-light');
+            if (theme === 'light') {
+                document.body.classList.add('theme-light');
+                themeToggle.textContent = 'Светлая тема';
+            } else {
+                themeToggle.textContent = 'Тёмная тема';
+            }
+        }
+
+        const savedTheme = window.localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+
+        themeToggle.addEventListener('click', function () {
+            const current = document.body.classList.contains('theme-light') ? 'light' : 'dark';
+            const next = current === 'light' ? 'dark' : 'light';
+            window.localStorage.setItem('theme', next);
+            applyTheme(next);
+        });
+
+        // Запускаем фоновую музыку по первому взаимодействию
+        function startMusicOnce() {
+            if (!bgMusic) return;
+            bgMusic.volume = 0.25;
+            bgMusic.play().catch(function () {});
+            document.removeEventListener('click', startMusicOnce);
+        }
+        document.addEventListener('click', startMusicOnce);
 
         updateHints();
     })();

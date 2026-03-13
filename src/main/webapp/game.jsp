@@ -16,10 +16,10 @@
             --text-main: #e5e7eb;
             --text-muted: #9ca3af;
             --board-bg: #020617;
-            --board-header-bg: #0b1120;
+            --board-header-bg: #020617;
             --cell-border: #1f2937;
-            --cell-available: #0b1725;
-            --cell-inactive: #020617;
+            --cell-available: #0369a1;   /* доступные клетки — ярко-синие */
+            --cell-inactive: #020617;    /* отстрелянные/соседние — почти чёрные */
             --stats-bg: rgba(15,23,42,0.9);
             --stats-border: rgba(148,163,184,0.4);
             --btn-secondary-bg: rgba(15,23,42,1);
@@ -36,8 +36,8 @@
             --board-bg: #f9fafb;
             --board-header-bg: #e5e7eb;
             --cell-border: #d1d5db;
-            --cell-available: #e0f2fe;
-            --cell-inactive: #f3f4f6;
+            --cell-available: #bae6fd;   /* доступные клетки — заметный голубой */
+            --cell-inactive: #f3f4f6;    /* отстрелянные/соседние — светло-серые */
             --stats-bg: #f3f4f6;
             --stats-border: #d1d5db;
             --btn-secondary-bg: #ffffff;
@@ -488,20 +488,32 @@
             });
         }
 
-        if (lastResultValid) {
-            if (lastResultHit && hitSound) {
-                hitSound.play().catch(function () {});
-            } else if (shotSound) {
-                shotSound.play().catch(function () {});
+        function playDeferredSounds() {
+            if (lastResultValid) {
+                if (lastResultHit && hitSound) {
+                    hitSound.play().catch(function () {});
+                } else if (shotSound) {
+                    shotSound.play().catch(function () {});
+                }
+            }
+
+            if (finished) {
+                if (statusNow === 'WON' && winSound) {
+                    winSound.play().catch(function () {});
+                } else if (statusNow === 'LOST' && loseSound) {
+                    loseSound.play().catch(function () {});
+                }
             }
         }
 
-        if (finished) {
-            if (statusNow === 'WON' && winSound) {
-                winSound.play().catch(function () {});
-            } else if (statusNow === 'LOST' && loseSound) {
-                loseSound.play().catch(function () {});
+        // Чтобы не упираться в политику автопроигрывания,
+        // звуки попадания/победы/поражения играем при первом клике после перезагрузки страницы.
+        if (lastResultValid || finished) {
+            function onFirstClick() {
+                playDeferredSounds();
+                document.removeEventListener('click', onFirstClick);
             }
+            document.addEventListener('click', onFirstClick);
         }
     })();
 </script>

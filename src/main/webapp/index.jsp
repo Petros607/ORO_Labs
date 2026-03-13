@@ -230,10 +230,10 @@
 
             const currentTargets = parseInt(targetsInput.value || minTargets, 10);
             const minShots = Math.max(minTargets, currentTargets);
-            const maxShots = n * m || 0;
+            const maxShots = 100;
             shotsInput.min = String(minShots);
             shotsInput.max = String(maxShots);
-            shotsHint.textContent = "цели <= выстрелы <= " + (maxShots || "N × M");
+            shotsHint.textContent = minShots + " <= выстрелы <= " + maxShots;
         }
 
         function showToast(message) {
@@ -244,35 +244,36 @@
             }, 2000);
         }
 
-        function clampInput(input, min, max, fieldName) {
+        function validateRange(input, min, max, fieldName) {
             const value = parseInt(input.value, 10);
             if (isNaN(value)) return;
-            if (value < min) {
-                input.value = String(min);
-                showToast(fieldName + " не может быть меньше " + min);
-            } else if (value > max) {
-                input.value = String(max);
-                showToast(fieldName + " не может быть больше " + max);
+            if (value < min || value > max) {
+                showToast(fieldName + " должно быть в диапазоне " + min + "–" + max);
             }
         }
 
         rowsInput.addEventListener('change', function () {
-            clampInput(rowsInput, 10, 20, "Количество строк");
+            validateRange(rowsInput, 10, 20, "Количество строк");
             updateHints();
         });
         colsInput.addEventListener('change', function () {
-            clampInput(colsInput, 10, 20, "Количество столбцов");
+            validateRange(colsInput, 10, 20, "Количество столбцов");
             updateHints();
         });
         targetsInput.addEventListener('change', function () {
             const maxTargets = parseInt(targetsInput.max || "1", 10);
-            clampInput(targetsInput, 1, maxTargets, "Количество целей");
+            validateRange(targetsInput, 1, maxTargets, "Количество целей");
             updateHints();
         });
 
         rowsInput.addEventListener('input', updateHints);
         colsInput.addEventListener('input', updateHints);
         targetsInput.addEventListener('input', updateHints);
+        shotsInput.addEventListener('change', function () {
+            const minShots = parseInt(shotsInput.min || "1", 10);
+            const maxShots = parseInt(shotsInput.max || "100", 10);
+            validateRange(shotsInput, minShots, maxShots, "Количество выстрелов");
+        });
 
         function applyTheme(theme) {
             document.body.classList.remove('theme-light');

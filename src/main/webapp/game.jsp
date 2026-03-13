@@ -108,6 +108,11 @@
             color: #fef3c7;
             font-weight: 700;
         }
+        .cell-target-revealed {
+            background: #14532d;
+            color: #bbf7d0;
+            font-weight: 600;
+        }
         .cell-miss {
             background: var(--cell-inactive);
             color: #6b7280;
@@ -334,7 +339,10 @@
                     CellState cell = field[r][c];
                     String cls = "cell-empty";
                     String symbol = "";
-                    if (cell == CellState.MISS) {
+                    if (finished && status == GameStatus.LOST && cell == CellState.TARGET) {
+                        cls = "cell-target-revealed";
+                        symbol = "●";
+                    } else if (cell == CellState.MISS) {
                         cls = "cell-miss";
                         symbol = "•";
                     } else if (cell == CellState.HIT) {
@@ -467,6 +475,20 @@
             if (!bgMusic) return;
             bgMusic.volume = 0.25;
             bgMusic.play().catch(function () {});
+
+            // При первом разрешённом клике пробуем также проиграть звук
+            // попадания/победы/поражения поверх фоновой музыки.
+            if (lastResultValid && lastResultHit && hitSound) {
+                hitSound.play().catch(function () {});
+            }
+            if (finished) {
+                if (statusNow === 'WON' && winSound) {
+                    winSound.play().catch(function () {});
+                } else if (statusNow === 'LOST' && loseSound) {
+                    loseSound.play().catch(function () {});
+                }
+            }
+
             document.removeEventListener('click', startMusicOnce);
         }
         document.addEventListener('click', startMusicOnce);
@@ -476,7 +498,8 @@
                 cell.addEventListener('click', function () {
                     if (cell.classList.contains('cell-hit')
                         || cell.classList.contains('cell-miss')
-                        || cell.classList.contains('cell-near')) {
+                        || cell.classList.contains('cell-near')
+                        || cell.classList.contains('cell-target-revealed')) {
                         return;
                     }
                     const row = cell.getAttribute('data-row');
@@ -495,21 +518,8 @@
             });
         }
 
-        // После загрузки страницы (перехода после выстрела) пытаемся
-        // воспроизвести звук попадания/победы/поражения поверх фоновой музыки.
-        if (lastResultValid) {
-            if (lastResultHit && hitSound) {
-                hitSound.play().catch(function () {});
-            }
-        }
-
-        if (finished) {
-            if (statusNow === 'WON' && winSound) {
-                winSound.play().catch(function () {});
-            } else if (statusNow === 'LOST' && loseSound) {
-                loseSound.play().catch(function () {});
-            }
-        }
+        // Остальные звуки (попадание/победа/поражение) запускаются внутри startMusicOnce
+        // при первом клике пользователя, чтобы не блокировались политикой автопроигрывания.
     })();
 </script>
 </body>

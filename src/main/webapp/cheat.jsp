@@ -2,10 +2,13 @@
 <html>
 <head>
     <title>Жульничество обнаружено!</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Вы жульничаете! Диапазон исчерпан.</h1>
-    <p>Хотите сыграть честно?</p>
-    <a href="index.jsp">Начать новую игру</a>
+    <div class="container">
+        <h1>Вы жульничаете! Диапазон исчерпан.</h1>
+        <p>Хотите сыграть честно?</p>
+        <a href="index.jsp">Начать новую игру</a>
+    </div>
 </body>
 </html>

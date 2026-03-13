@@ -15,7 +15,6 @@ public class GameServlet extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("start".equals(action)) {
-            // Start new game
             int min = Integer.parseInt(request.getParameter("min"));
             int max = Integer.parseInt(request.getParameter("max"));
             if (min >= max) {
@@ -37,13 +36,11 @@ public class GameServlet extends HttpServlet {
             } else if ("lower".equals(responseParam)) {
                 max = guess - 1;
             } else if ("equal".equals(responseParam)) {
-                // Win
                 request.getRequestDispatcher("/win.jsp").forward(request, response);
                 return;
             }
 
             if (min > max) {
-                // Cheat detected
                 request.getRequestDispatcher("/cheat.jsp").forward(request, response);
                 return;
             }
@@ -54,7 +51,6 @@ public class GameServlet extends HttpServlet {
             session.setAttribute("guess", guess);
             request.getRequestDispatcher("/game.jsp").forward(request, response);
         } else {
-            // Default to start page
             request.getRequestDispatcher("/index.jsp").forward(request, response);
         }
     }

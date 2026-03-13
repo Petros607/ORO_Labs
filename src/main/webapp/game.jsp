@@ -1,0 +1,305 @@
+<%@ page contentType="text/html; charset=UTF-8" language="java" %>
+<%@ page import="com.example.battleship.model.GameSession" %>
+<%@ page import="com.example.battleship.model.CellState" %>
+<%@ page import="com.example.battleship.model.GameStatus" %>
+<%@ page import="com.example.battleship.model.ShotResult" %>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Морской бой – игра</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #1a365d, #0f172a);
+            color: #e5e7eb;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: auto 260px;
+            gap: 32px;
+            padding: 32px 40px;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.96);
+            box-shadow: 0 30px 60px rgba(15,23,42,0.9);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+        }
+        h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            margin-bottom: 18px;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+        table.board {
+            border-collapse: collapse;
+            background: #020617;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        table.board th,
+        table.board td {
+            width: 28px;
+            height: 28px;
+            text-align: center;
+            font-size: 13px;
+        }
+        table.board th {
+            background: #0b1120;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        table.board td {
+            border: 1px solid #1f2937;
+            cursor: default;
+        }
+        .cell-hit {
+            background: radial-gradient(circle, #f97316, #b91c1c 70%);
+            color: #fef3c7;
+            font-weight: 700;
+        }
+        .cell-miss {
+            color: #6b7280;
+        }
+        .cell-empty {
+            background: #020617;
+        }
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+        .stats {
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(15,23,42,0.9);
+            border: 1px solid rgba(148,163,184,0.4);
+            font-size: 13px;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .badge-live {
+            background: rgba(34,197,94,0.1);
+            color: #bbf7d0;
+            border: 1px solid rgba(34,197,94,0.6);
+        }
+        .badge-won {
+            background: rgba(59,130,246,0.15);
+            color: #bfdbfe;
+            border: 1px solid rgba(59,130,246,0.7);
+        }
+        .badge-lost {
+            background: rgba(239,68,68,0.15);
+            color: #fecaca;
+            border: 1px solid rgba(248,113,113,0.7);
+        }
+        .message {
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .message-info {
+            background: rgba(15,118,110,0.2);
+            border: 1px solid rgba(45,212,191,0.6);
+            color: #a5f3fc;
+        }
+        .message-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(248,113,113,0.7);
+            color: #fecaca;
+        }
+        form.shoot {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 12px;
+            font-size: 13px;
+        }
+        label {
+            display: block;
+            margin-bottom: 4px;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 7px 9px;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 13px;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px #38bdf8;
+        }
+        .btn-primary,
+        .btn-secondary {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, filter 0.05s ease-out;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+            box-shadow: 0 14px 30px rgba(34,197,94,0.35);
+        }
+        .btn-secondary {
+            background: rgba(15,23,42,1);
+            color: #e5e7eb;
+            border: 1px solid rgba(148,163,184,0.7);
+        }
+        .btn-primary:hover,
+        .btn-secondary:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+        }
+        .btn-primary:active,
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+<%
+    GameSession game = (GameSession) session.getAttribute("game");
+    if (game == null) {
+%>
+    <script>window.location.href = "index.jsp";</script>
+<%
+        return;
+    }
+    ShotResult shotResult = (ShotResult) request.getAttribute("shotResult");
+    CellState[][] field = game.getField();
+%>
+<div class="layout">
+    <div>
+        <h1>Морской бой</h1>
+        <div class="subtitle">Одинарные цели, не касаются друг друга ни сторонами, ни углами.</div>
+
+        <table class="board">
+            <tr>
+                <th></th>
+                <% for (int c = 0; c < game.getCols(); c++) { %>
+                <th><%= (c + 1) %></th>
+                <% } %>
+            </tr>
+            <% for (int r = 0; r < game.getRows(); r++) { %>
+            <tr>
+                <th><%= (r + 1) %></th>
+                <% for (int c = 0; c < game.getCols(); c++) {
+                    CellState cell = field[r][c];
+                    String cls = "cell-empty";
+                    String symbol = "";
+                    if (cell == CellState.MISS) {
+                        cls = "cell-miss";
+                        symbol = "•";
+                    } else if (cell == CellState.HIT) {
+                        cls = "cell-hit";
+                        symbol = "X";
+                    }
+                %>
+                <td class="<%= cls %>"><%= symbol %></td>
+                <% } %>
+            </tr>
+            <% } %>
+        </table>
+    </div>
+
+    <div class="panel">
+        <div class="stats">
+            <div class="stats-row">
+                <span>Статус</span>
+                <span>
+                <%
+                    GameStatus status = game.getStatus();
+                    if (status == GameStatus.IN_PROGRESS) {
+                %>
+                    <span class="badge badge-live">В процессе</span>
+                <% } else if (status == GameStatus.WON) { %>
+                    <span class="badge badge-won">Победа</span>
+                <% } else { %>
+                    <span class="badge badge-lost">Поражение</span>
+                <% } %>
+                </span>
+            </div>
+            <div class="stats-row">
+                <span>Целей уничтожено</span>
+                <span><%= game.getDestroyedTargets() %> / <%= game.getTotalTargets() %></span>
+            </div>
+            <div class="stats-row">
+                <span>Оставшиеся выстрелы</span>
+                <span><%= game.getRemainingShots() %></span>
+            </div>
+        </div>
+
+        <% if (shotResult != null) { %>
+        <div class="message <%= shotResult.isValid() ? "message-info" : "message-error" %>">
+            <%= shotResult.getMessage() %>
+        </div>
+        <% } %>
+
+        <%
+            boolean finished = game.isFinished();
+        %>
+        <div>
+            <form method="post" action="shot" class="shoot">
+                <div>
+                    <label for="row">Строка</label>
+                    <input type="number" id="row" name="row"
+                           min="1" max="<%= game.getRows() %>" <%= finished ? "disabled" : "" %> required>
+                </div>
+                <div>
+                    <label for="col">Столбец</label>
+                    <input type="number" id="col" name="col"
+                           min="1" max="<%= game.getCols() %>" <%= finished ? "disabled" : "" %> required>
+                </div>
+                <div class="actions">
+                    <button type="button" class="btn-secondary"
+                            onclick="window.location.href='index.jsp'">Новая игра</button>
+                    <button type="submit" class="btn-primary" <%= finished ? "disabled" : "" %>>
+                        Выстрел
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+

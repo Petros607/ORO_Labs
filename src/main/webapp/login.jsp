@@ -23,7 +23,7 @@
     <% } %>
 
     <form method="post" action="login">
-        <div class="grid" style="grid-template-columns: 1fr;">
+        <div class="grid">
             <div>
                 <label for="nickname">Имя пользователя</label>
                 <input type="text" id="nickname" name="nickname" required>

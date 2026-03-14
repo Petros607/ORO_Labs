@@ -32,6 +32,8 @@ public class GameSession implements Serializable {
         this.totalTargets = totalTargets;
         this.remainingShots = shots;
         this.field = new CellState[rows][cols];
+
+        // Инициализация поля
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 field[r][c] = CellState.EMPTY;
@@ -41,46 +43,72 @@ public class GameSession implements Serializable {
         int maxTargets = (int) (Math.ceil(rows / 2.0) * Math.ceil(cols / 2.0));
         double density = maxTargets == 0 ? 0.0 : (double) totalTargets / maxTargets;
 
-        // Если количество целей близко к верхней границе (например, 25 из 25 на 10×10),
-        // используем детерминированный "шахматный" алгоритм, чтобы гарантировать размещение.
-        // В остальных случаях — случайное размещение.
-        if (density >= 0.85) {
+        // Пытаемся разместить случайно, если плотность не слишком высокая
+        if (density >= 0.97) {
+            log.log(Level.INFO, "High density detected ({0}), using deterministic placement", density);
             placeTargetsDeterministic();
         } else {
-            placeTargetsRandomly();
+            boolean placed = tryRandomPlacementWithRetries(3);
+            if (!placed) {
+                log.log(Level.WARNING,
+                        "Random placement failed after multiple attempts, falling back to deterministic");
+
+                for (int r = 0; r < rows; r++) {
+                    for (int c = 0; c < cols; c++) {
+                        field[r][c] = CellState.EMPTY;
+                    }
+                }
+
+                placeTargetsDeterministic();
+            }
         }
 
         log.log(Level.FINE, "GameSession created: rows={0}, cols={1}, totalTargets={2}, shots={3}, density={4}",
                 new Object[]{rows, cols, totalTargets, shots, density});
     }
 
-    private void placeTargetsDeterministic() {
-        int placed = 0;
-        outer:
-        for (int r = 0; r < rows; r += 2) {
-            for (int c = 0; c < cols; c += 2) {
-                field[r][c] = CellState.TARGET;
-                placed++;
-                if (placed == totalTargets) {
-                    break outer;
+    /**
+     * Пытается разместить цели случайно с несколькими попытками
+     * @param maxRetries максимальное количество попыток
+     * @return true если удалось разместить все цели
+     */
+    private boolean tryRandomPlacementWithRetries(int maxRetries) {
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            log.log(Level.FINE, "Random placement attempt {0} of {1}",
+                    new Object[]{attempt, maxRetries});
+
+            // Очищаем поле для новой попытки (кроме первой)
+            if (attempt > 1) {
+                for (int r = 0; r < rows; r++) {
+                    for (int c = 0; c < cols; c++) {
+                        field[r][c] = CellState.EMPTY;
+                    }
                 }
             }
+
+            if (placeTargetsRandomlyWithAttempts()) {
+                log.log(Level.INFO, "Successfully placed all targets randomly on attempt {0}", attempt);
+                return true;
+            }
         }
-        if (placed < totalTargets) {
-            log.log(Level.WARNING, "Could not place all targets deterministically: requested={0}, placed={1}",
-                    new Object[]{totalTargets, placed});
-        }
+
+        return false;
     }
 
-    private void placeTargetsRandomly() {
+    /**
+     * Пытается разместить цели случайно в рамках одной попытки
+     * @return true если удалось разместить все цели
+     */
+    private boolean placeTargetsRandomlyWithAttempts() {
         Random random = new Random();
         int placed = 0;
         int attempts = 0;
-        int maxAttempts = rows * cols * 20;
+        int maxAttempts = rows * cols * 20; // Максимальное количество попыток на одну цель
 
         while (placed < totalTargets && attempts < maxAttempts) {
             int r = random.nextInt(rows);
             int c = random.nextInt(cols);
+
             if (canPlaceTarget(r, c)) {
                 field[r][c] = CellState.TARGET;
                 placed++;
@@ -88,17 +116,28 @@ public class GameSession implements Serializable {
             attempts++;
         }
 
-        if (placed < totalTargets) {
-            log.log(Level.WARNING,
-                    "Random placement could not place all targets, falling back to deterministic: requested={0}, placed={1}",
-                    new Object[]{totalTargets, placed});
-            // Сбросить поле и расставить детерминированно
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    field[r][c] = CellState.EMPTY;
+        return placed == totalTargets;
+    }
+
+    private void placeTargetsDeterministic() {
+        int placed = 0;
+        outer:
+        for (int r = 0; r < rows; r += 2) {
+            for (int c = 0; c < cols; c += 2) {
+                if (placed < totalTargets) {
+                    field[r][c] = CellState.TARGET;
+                    placed++;
+                } else {
+                    break outer;
                 }
             }
-            placeTargetsDeterministic();
+        }
+
+        if (placed < totalTargets) {
+            log.log(Level.WARNING, "Could not place all targets deterministically: requested={0}, placed={1}",
+                    new Object[]{totalTargets, placed});
+        } else {
+            log.log(Level.INFO, "Successfully placed all targets deterministically");
         }
     }
 
@@ -110,15 +149,17 @@ public class GameSession implements Serializable {
         if (field[r][c] == CellState.TARGET) {
             return false;
         }
+
+        // Проверяем все соседние клетки (включая диагональные)
         for (int dr = -1; dr <= 1; dr++) {
             for (int dc = -1; dc <= 1; dc++) {
                 int nr = r + dr;
                 int nc = c + dc;
-                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) {
-                    continue;
-                }
-                if (field[nr][nc] == CellState.TARGET) {
-                    return false;
+
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                    if (field[nr][nc] == CellState.TARGET) {
+                        return false;
+                    }
                 }
             }
         }

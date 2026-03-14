@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Вход в Морской бой</title>
-    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
 <div class="card">
     <div class="top-bar">
-        <button type="button" class="pill-button" id="themeToggle">Тёмная тема</button>
+        <button type="button" class="theme-button" id="themeToggle">Тёмная тема</button>
     </div>
     <h1>Вход</h1>
 
@@ -25,17 +25,19 @@
     <form method="post" action="login">
         <div class="grid" style="grid-template-columns: 1fr;">
             <div>
-                <label for="nickname">Ник</label>
+                <label for="nickname">Имя пользователя</label>
                 <input type="text" id="nickname" name="nickname" required>
+                <div class="helper" id="nicknameHint">От 4 до скольки-то там символов</div>
             </div>
             <div>
                 <label for="password">Пароль</label>
                 <input type="password" id="password" name="password" required>
+                <div class="helper" id="passwordHint">От 4 до скольки-то там символов</div>
             </div>
         </div>
-        <div class="actions" style="justify-content: space-between;">
-            <button type="submit">Войти</button>
-            <a href="register.jsp" style="text-decoration: none; font-weight: 600; color: #38bdf8; align-self: center;">Зарегистрироваться</a>
+        <div class="actions">
+            <button class="log-button" type="submit">Войти</button>
+            <a class="reg-text" href="register.jsp">Зарегистрироваться</a>
         </div>
     </form>
 </div>

@@ -1,4 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" language="java" %>
+<%@ page import="com.example.battleship.model.User" %>
+<%@ page import="com.example.battleship.model.DBUtils" %>
+<%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -10,9 +13,43 @@
 <div class="card">
     <div class="top-bar">
         <button type="button" class="pill-button" id="themeToggle">Тёмная тема</button>
+        <div class="auth-chip">
+            <%
+                User currentUser = (User) session.getAttribute("user");
+                if (currentUser == null) {
+            %>
+                <a class="pill-button" href="login.jsp" style="min-width: 80px;">Войти</a>
+            <% } else { %>
+                <span style="color: #d1d5db; font-size: 11px; margin-right: 8px;">Привет, <strong><%= currentUser.getNickname() %></strong></span>
+                <a class="pill-button" href="logout">Выйти</a>
+            <% } %>
+        </div>
     </div>
     <h1>Морской бой</h1>
     <div class="subtitle">Настройте параметры поля и количество кораблей. Все цели занимают одну клетку и не касаются друг друга.</div>
+
+    <%
+        List<User> leaderboard = DBUtils.getTopPlayers(5);
+        if (leaderboard != null && !leaderboard.isEmpty()) {
+    %>
+    <div class="leaderboard">
+        <h3>Топ-5 игроков</h3>
+        <table>
+            <thead>
+            <tr><th>#</th><th>Ник</th><th>Побед</th></tr>
+            </thead>
+            <tbody>
+            <% int pos = 1; for (User u : leaderboard) { %>
+                <tr>
+                    <td><%= pos++ %></td>
+                    <td><%= u.getNickname() %></td>
+                    <td><%= u.getCountOfWins() %></td>
+                </tr>
+            <% } %>
+            </tbody>
+        </table>
+    </div>
+    <% } %>
 
     <%
         String error = (String) request.getAttribute("error");
@@ -125,27 +162,7 @@
             validateRange(shotsInput, minShots, maxShots, "Количество выстрелов");
         });
 
-        function applyTheme(theme) {
-            document.body.classList.remove('theme-light');
-            if (theme === 'light') {
-                document.body.classList.add('theme-light');
-                themeToggle.textContent = 'Светлая тема';
-            } else {
-                themeToggle.textContent = 'Тёмная тема';
-            }
-        }
-
-        const savedTheme = window.localStorage.getItem('theme') || 'dark';
-        applyTheme(savedTheme);
-
-        themeToggle.addEventListener('click', function () {
-            const current = document.body.classList.contains('theme-light') ? 'light' : 'dark';
-            const next = current === 'light' ? 'dark' : 'light';
-            window.localStorage.setItem('theme', next);
-            applyTheme(next);
-        });
-
-        // Запускаем фоновую музыку по первому взаимодействию
+        // Запускаем фоновую музыку по первому взаимодействия
         function startMusicOnce() {
             if (!bgMusic) return;
             bgMusic.volume = 0.25;
@@ -157,4 +174,5 @@
         updateHints();
     })();
 </script>
+<script src="js/theme.js"></script>
 </html>

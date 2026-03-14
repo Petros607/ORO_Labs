@@ -3,6 +3,7 @@
 <%@ page import="com.example.battleship.model.CellState" %>
 <%@ page import="com.example.battleship.model.GameStatus" %>
 <%@ page import="com.example.battleship.model.ShotResult" %>
+<%@ page import="com.example.battleship.model.User" %>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -27,6 +28,17 @@
 <div class="layout">
     <div class="top-bar">
         <button type="button" class="pill-button" id="themeToggle">Тёмная тема</button>
+        <div class="auth-chip">
+            <%
+                User currentUser = (User) session.getAttribute("user");
+                if (currentUser == null) {
+            %>
+                <a class="pill-button" href="login.jsp" style="min-width: 80px;">Войти</a>
+            <% } else { %>
+                <span style="color: #d1d5db; font-size: 11px; margin-right: 8px;">Привет, <strong><%= currentUser.getNickname() %></strong></span>
+                <a class="pill-button" href="logout">Выйти</a>
+            <% } %>
+        </div>
     </div>
     <div>
         <h1>Морской бой</h1>
@@ -161,26 +173,6 @@
         const winSound = document.getElementById('winSound');
         const loseSound = document.getElementById('loseSound');
 
-        function applyTheme(theme) {
-            document.body.classList.remove('theme-light');
-            if (theme === 'light') {
-                document.body.classList.add('theme-light');
-                themeToggle.textContent = 'Светлая тема';
-            } else {
-                themeToggle.textContent = 'Тёмная тема';
-            }
-        }
-
-        const savedTheme = window.localStorage.getItem('theme') || 'dark';
-        applyTheme(savedTheme);
-
-        themeToggle.addEventListener('click', function () {
-            const current = document.body.classList.contains('theme-light') ? 'light' : 'dark';
-            const next = current === 'light' ? 'dark' : 'light';
-            window.localStorage.setItem('theme', next);
-            applyTheme(next);
-        });
-
         function startMusicOnce() {
             if (!bgMusic) return;
             bgMusic.volume = 0.25;
@@ -229,5 +221,6 @@
         }
     })();
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

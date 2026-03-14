@@ -1,7 +1,9 @@
 package com.example.battleship.servlet;
 
+import com.example.battleship.model.DBUtils;
 import com.example.battleship.model.GameSession;
 import com.example.battleship.model.ShotResult;
+import com.example.battleship.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -62,6 +64,16 @@ public class ShotServlet extends HttpServlet {
         }
 
         req.setAttribute("shotResult", result);
+
+        if (game.getStatus() == com.example.battleship.model.GameStatus.WON) {
+            User currentUser = (User) httpSession.getAttribute("user");
+            if (currentUser != null) {
+                DBUtils.incrementWins(currentUser.getNickname());
+                currentUser.setCountOfWins(currentUser.getCountOfWins() + 1);
+                httpSession.setAttribute("user", currentUser);
+            }
+        }
+
         // Сессия уже обновлена внутри GameSession
         req.getRequestDispatcher("game.jsp").forward(req, resp);
     }

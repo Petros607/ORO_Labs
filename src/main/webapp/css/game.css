@@ -276,8 +276,14 @@ input[type="number"]:focus {
     top: 12px;
     right: 16px;
     display: flex;
+    align-items: center;
     gap: 8px;
     font-size: 11px;
+}
+.auth-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 .pill-button {
     border-radius: 999px;

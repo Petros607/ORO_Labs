@@ -21,6 +21,7 @@ public class RegisterServlet extends HttpServlet {
     private static final Pattern LOGIN_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$");
     // Регулярное выражение для проверки пароля (минимум: одна буква, одна цифра)
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).+$");
+    private static final Pattern ALLOWED_PATTERN = Pattern.compile("^[a-zA-Z0-9!@#$%^&*]+$");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -80,7 +81,7 @@ public class RegisterServlet extends HttpServlet {
         }
 
         // Проверка пароля на наличие запрещенных символов
-        if (containsSpecialCharacters(password)) {
+        if (!ALLOWED_PATTERN.matcher(password).matches()) {
             req.setAttribute("error", "Пароль содержит недопустимые символы. Разрешены только латинские буквы, цифры и символы !@#$%^&*");
             req.getRequestDispatcher("register.jsp").forward(req, resp);
             return;
@@ -117,11 +118,5 @@ public class RegisterServlet extends HttpServlet {
             req.setAttribute("error", "Ошибка при регистрации");
             req.getRequestDispatcher("register.jsp").forward(req, resp);
         }
-    }
-
-    private boolean containsSpecialCharacters(String str) {
-        // Разрешенные символы: латинские буквы, цифры и основные спецсимволы
-        Pattern allowedPattern = Pattern.compile("^[a-zA-Z0-9!@#$%^&*]+$");
-        return !allowedPattern.matcher(str).matches();
     }
 }

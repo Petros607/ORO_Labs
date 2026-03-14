@@ -27,22 +27,22 @@
 %>
 <div class="layout">
     <div class="top-bar">
-        <button type="button" class="pill-button" id="themeToggle">Тёмная тема</button>
+        <button type="button" class="theme-button" id="themeToggle">Тёмная тема</button>
         <div class="auth-chip">
             <%
                 User currentUser = (User) session.getAttribute("user");
                 if (currentUser == null) {
             %>
-                <a class="pill-button" href="login.jsp" style="min-width: 80px;">Войти</a>
+            <a class="log-button" href="login.jsp" style="min-width: 80px;">Войти</a>
             <% } else { %>
-                <span style="color: #d1d5db; font-size: 11px; margin-right: 8px;">Привет, <strong><%= currentUser.getNickname() %></strong></span>
-                <a class="pill-button" href="logout">Выйти</a>
+            <span class="nickname"><%= currentUser.getNickname() %></span>
+            <a class="log-button" href="logout">Выйти</a>
             <% } %>
         </div>
     </div>
-    <div>
+    <div class="game-class">
         <h1>Морской бой</h1>
-        <div class="subtitle">Одинарные цели, не касаются друг друга ни сторонами, ни углами.</div>
+        <div class="subtitle">Однопалубные корабли не касаются друг друга.</div>
 
         <form id="shootForm" method="post" action="shot">
             <input type="hidden" name="row" id="rowField">

@@ -28,12 +28,13 @@
             <div>
                 <label for="nickname">Имя пользователя</label>
                 <input type="text" id="nickname" name="nickname" required>
-                <div class="helper" id="nicknameHint">От 4 до скольки-то там символов</div>
+                <div class="helper" id="nicknameHint">От 3 до 15 символов. Разрешены: латинские буквы, цифры и нижнее подчеркивание (_)</div>
             </div>
             <div>
                 <label for="password">Пароль</label>
                 <input type="password" id="password" name="password" required>
-                <div class="helper" id="passwordHint">От 4 до скольки-то там символов</div>
+                <div class="helper" id="passwordHint">От 6 до 15 символов. Обязательно: хотя бы одна буква и одна цифра.<br>
+                    Разрешены: латинские буквы, цифры и символы !@#$%^&*</div>
             </div>
             <div>
                 <label for="confirm">Повторите пароль</label>

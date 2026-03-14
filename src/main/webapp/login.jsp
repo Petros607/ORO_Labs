@@ -28,12 +28,10 @@
             <div>
                 <label for="nickname">Имя пользователя</label>
                 <input type="text" id="nickname" name="nickname" required>
-                <div class="helper" id="nicknameHint">От 4 до скольки-то там символов</div>
             </div>
             <div>
                 <label for="password">Пароль</label>
                 <input type="password" id="password" name="password" required>
-                <div class="helper" id="passwordHint">От 4 до скольки-то там символов</div>
             </div>
         </div>
         <div class="actions">

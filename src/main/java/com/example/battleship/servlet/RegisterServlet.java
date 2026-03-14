@@ -12,10 +12,15 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 @WebServlet(name = "RegisterServlet", urlPatterns = {"/register"})
 public class RegisterServlet extends HttpServlet {
     private static final Logger log = Logger.getLogger(RegisterServlet.class.getName());
+    // Регулярное выражение для проверки логина (только буквы, цифры и нижнее подчеркивание)
+    private static final Pattern LOGIN_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$");
+    // Регулярное выражение для проверки пароля (минимум: одна буква, одна цифра)
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).+$");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -29,20 +34,68 @@ public class RegisterServlet extends HttpServlet {
         String password = req.getParameter("password");
         String confirm = req.getParameter("confirm");
 
-        if (nickname == null || password == null || confirm == null || nickname.trim().isEmpty() || password.trim().isEmpty() || confirm.trim().isEmpty()) {
+        // Проверка на пустые поля
+        if (nickname == null || password == null || confirm == null ||
+                nickname.trim().isEmpty() || password.trim().isEmpty() || confirm.trim().isEmpty()) {
             req.setAttribute("error", "Заполните все поля");
             req.getRequestDispatcher("register.jsp").forward(req, resp);
             return;
         }
 
-        if (!password.equals(confirm)) {
-            req.setAttribute("error", "Пароли не совпадают");
+        nickname = nickname.trim();
+        password = password.trim();
+        confirm = confirm.trim();
+
+        // Проверка длины логина (3-15 символов)
+        if (nickname.length() < 3) {
+            req.setAttribute("error", "Логин должен содержать не менее 3 символов");
             req.getRequestDispatcher("register.jsp").forward(req, resp);
             return;
         }
 
-        if (password.length() < 4) {
-            req.setAttribute("error", "Пароль должен быть не менее 4 символов");
+        if (nickname.length() > 15) {
+            req.setAttribute("error", "Логин не должен превышать 15 символов");
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
+            return;
+        }
+
+        // Проверка логина на наличие только разрешенных символов
+        if (!LOGIN_PATTERN.matcher(nickname).matches()) {
+            req.setAttribute("error", "Логин может содержать только латинские буквы, цифры и символ подчеркивания");
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
+            return;
+        }
+
+        // Проверка длины пароля (6-15 символов)
+        if (password.length() < 6) {
+            req.setAttribute("error", "Пароль должен содержать не менее 6 символов");
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
+            return;
+        }
+
+        if (password.length() > 15) {
+            req.setAttribute("error", "Пароль не должен превышать 15 символов");
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
+            return;
+        }
+
+        // Проверка пароля на наличие запрещенных символов
+        if (containsSpecialCharacters(password)) {
+            req.setAttribute("error", "Пароль содержит недопустимые символы. Разрешены только латинские буквы, цифры и символы !@#$%^&*");
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
+            return;
+        }
+
+        // Проверка сложности пароля (должен содержать хотя бы одну букву и одну цифру)
+        if (!PASSWORD_PATTERN.matcher(password).matches()) {
+            req.setAttribute("error", "Пароль должен содержать хотя бы одну букву и одну цифру");
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
+            return;
+        }
+
+        // Проверка совпадения паролей
+        if (!password.equals(confirm)) {
+            req.setAttribute("error", "Пароли не совпадают");
             req.getRequestDispatcher("register.jsp").forward(req, resp);
             return;
         }
@@ -64,5 +117,11 @@ public class RegisterServlet extends HttpServlet {
             req.setAttribute("error", "Ошибка при регистрации");
             req.getRequestDispatcher("register.jsp").forward(req, resp);
         }
+    }
+
+    private boolean containsSpecialCharacters(String str) {
+        // Разрешенные символы: латинские буквы, цифры и основные спецсимволы
+        Pattern allowedPattern = Pattern.compile("^[a-zA-Z0-9!@#$%^&*]+$");
+        return !allowedPattern.matcher(str).matches();
     }
 }

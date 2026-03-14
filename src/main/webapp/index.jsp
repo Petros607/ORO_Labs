@@ -12,31 +12,31 @@
 <body>
 <div class="card">
     <div class="top-bar">
-        <button type="button" class="pill-button" id="themeToggle">Тёмная тема</button>
+        <button type="button" class="theme-button" id="themeToggle">Тёмная тема</button>
         <div class="auth-chip">
             <%
                 User currentUser = (User) session.getAttribute("user");
                 if (currentUser == null) {
             %>
-                <a class="pill-button" href="login.jsp" style="min-width: 80px;">Войти</a>
+                <a class="log-button" href="login.jsp" style="min-width: 80px;">Войти</a>
             <% } else { %>
-                <span style="color: #d1d5db; font-size: 11px; margin-right: 8px;">Привет, <strong><%= currentUser.getNickname() %></strong></span>
-                <a class="pill-button" href="logout">Выйти</a>
+                <span class="nickname"><%= currentUser.getNickname() %></span>
+                <a class="log-button" href="logout">Выйти</a>
             <% } %>
         </div>
     </div>
     <h1>Морской бой</h1>
-    <div class="subtitle">Настройте параметры поля и количество кораблей. Все цели занимают одну клетку и не касаются друг друга.</div>
+    <div class="subtitle">Настройте параметры поля и количество кораблей.</div>
 
     <%
         List<User> leaderboard = DBUtils.getTopPlayers(5);
-        if (leaderboard != null && !leaderboard.isEmpty()) {
+        if (!leaderboard.isEmpty()) {
     %>
     <div class="leaderboard">
         <h3>Топ-5 игроков</h3>
         <table>
             <thead>
-            <tr><th>#</th><th>Ник</th><th>Побед</th></tr>
+            <tr><th>#</th><th>Имя пользователя</th><th>Количество побед</th></tr>
             </thead>
             <tbody>
             <% int pos = 1; for (User u : leaderboard) { %>
@@ -60,16 +60,17 @@
         <%= (error == null || error.trim().isEmpty()) ? "Проверьте корректность введённых параметров." : error %>
     </div>
     <% } %>
-
     <form method="post" action="new-game">
         <div class="grid">
             <div>
-                <label for="rows">Количество строк (10–20)</label>
+                <label for="rows">Количество строк</label>
                 <input type="number" id="rows" name="rows" min="10" max="20" value="10" required>
+                <div class="helper" id="rowsHint">От 10 до 20 включительно</div>
             </div>
             <div>
-                <label for="cols">Количество столбцов (10–20)</label>
+                <label for="cols">Количество столбцов</label>
                 <input type="number" id="cols" name="cols" min="10" max="20" value="10" required>
+                <div class="helper" id="colsHint">От 10 до 20 включительно</div>
             </div>
             <div>
                 <label for="targets">Количество целей</label>
@@ -83,12 +84,12 @@
             </div>
         </div>
         <div class="actions">
-            <button type="submit">Начать игру</button>
+            <button class="submit-button" type="submit">Начать игру</button>
         </div>
+        <div class="toast" id="inputToast"></div>
     </form>
 </div>
 <audio id="bgMusic" src="audio/bg-music.mp3" loop></audio>
-<div class="toast" id="inputToast"></div>
 <script>
     (function () {
         const rowsInput = document.getElementById('rows');
@@ -125,10 +126,11 @@
 
         function showToast(message) {
             toast.textContent = message;
-            toast.style.display = 'block';
+            toast.classList.add('show');
+
             setTimeout(function () {
-                toast.style.display = 'none';
-            }, 2000);
+                toast.classList.remove('show');
+            }, 4000);
         }
 
         function validateRange(input, min, max, fieldName) {

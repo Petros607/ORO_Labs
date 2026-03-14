@@ -9,6 +9,7 @@
 <body>
 <div class="card">
     <div class="top-bar">
+        <a class="back-text" href="index.jsp">← К игре</a>
         <button type="button" class="theme-button" id="themeToggle">Тёмная тема</button>
     </div>
     <h1>Регистрация</h1>

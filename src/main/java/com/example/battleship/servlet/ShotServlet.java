@@ -42,7 +42,7 @@ public class ShotServlet extends HttpServlet {
         ShotResult result;
 
         try {
-            int row = Integer.parseInt(rowParam) - 1; // пользователь вводит с 1
+            int row = Integer.parseInt(rowParam) - 1;
             int col = Integer.parseInt(colParam) - 1;
             result = game.shoot(row, col);
             log.log(Level.INFO,
@@ -78,5 +78,3 @@ public class ShotServlet extends HttpServlet {
         req.getRequestDispatcher("game.jsp").forward(req, resp);
     }
 }
-
-

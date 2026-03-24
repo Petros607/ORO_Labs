@@ -164,7 +164,6 @@
             validateRange(shotsInput, minShots, maxShots, "Количество выстрелов");
         });
 
-        // Запускаем фоновую музыку по первому взаимодействия
         function startMusicOnce() {
             if (!bgMusic) return;
             bgMusic.volume = 0.25;
